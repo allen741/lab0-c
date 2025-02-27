@@ -155,7 +155,25 @@ int q_size(struct list_head *head)
 /* Delete the middle node in queue */
 bool q_delete_mid(struct list_head *head)
 {
-    return false;
+    if (!head || list_empty(head)) {
+        return false;
+    }
+    if (head->next == head->prev) {
+        free(list_entry(head->next, element_t, list)->value);
+        free(list_entry(head->next, element_t, list));
+        head->next = head;
+        head->prev = head;
+    }
+    struct list_head *fast, *slow;
+    for (fast = head->next, slow = head->next;
+         fast != head && fast->next != head;
+         fast = fast->next->next, slow = slow->next) {
+    }
+
+    list_del(slow);
+    free(list_entry(slow, element_t, list)->value);
+    free(list_entry(slow, element_t, list));
+    return true;
 }
 
 /* Delete all nodes that have duplicate string */
