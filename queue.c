@@ -176,6 +176,7 @@ bool q_delete_mid(struct list_head *head)
         free(list_entry(head->next, element_t, list));
         head->next = head;
         head->prev = head;
+        return true;
     }
     struct list_head *fast, *slow;
     for (fast = head->next, slow = head->next;
