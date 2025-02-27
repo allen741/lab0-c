@@ -87,7 +87,18 @@ bool q_insert_head(struct list_head *head, char *s)
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
-    return false;
+    if (!head || !s) {
+        return false;
+    }
+
+    element_t *new_element = e_new(s);
+
+    if (!new_element) {
+        return false;
+    }
+
+    list_add_tail(&(new_element->list), head);
+    return true;
 }
 
 /* Remove an element from head of queue */
