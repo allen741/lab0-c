@@ -179,7 +179,20 @@ bool q_delete_mid(struct list_head *head)
 /* Delete all nodes that have duplicate string */
 bool q_delete_dup(struct list_head *head)
 {
-    return false;
+    if (!head) {
+        return false;
+    }
+    struct list_head *pos, *pos_next;
+
+    list_for_each_safe (pos, pos_next, head) {
+        if (strcmp(list_entry(pos, element_t, list)->value,
+                   list_entry(pos_next, element_t, list)->value) == 0) {
+            list_del(pos);
+            free(list_entry(pos, element_t, list)->value);
+            free(list_entry(pos, element_t, list));
+        }
+    }
+    return true;
 }
 
 /* Swap every two adjacent nodes */
