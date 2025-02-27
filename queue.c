@@ -302,7 +302,7 @@ int q_ascend(struct list_head *head)
         pos_next = pos_next->next;
         count++;
     }
-    return count;
+    return count + 1;
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -316,8 +316,8 @@ int q_descend(struct list_head *head)
         return 1;
     }
     int count = 0;
-    for (struct list_head *pos = head->next, *pos_next = pos->next;
-         pos_next != head; pos = pos->next, pos_next = pos->next) {
+    struct list_head *pos, *pos_next;
+    for (pos = head->next, pos_next = pos->next; pos_next != head;) {
         if (strcmp(list_entry(pos, element_t, list)->value,
                    list_entry(pos_next, element_t, list)->value) < 0) {
             list_del(pos_next);
@@ -330,7 +330,7 @@ int q_descend(struct list_head *head)
         pos_next = pos_next->next;
         count++;
     }
-    return count;
+    return count + 1;
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
@@ -356,6 +356,7 @@ int q_merge(struct list_head *head, bool descend)
 
         queue->prev->next = NULL;
         queue = queue->next;
+        queue_next = queue->next;
         queue->prev->next = NULL;
 
         while (queue) {
@@ -365,6 +366,9 @@ int q_merge(struct list_head *head, bool descend)
                 add_to_first_queue(<=);
             }
             queue = queue_next;
+            if (queue_next) {
+                queue_next = queue_next->next;
+            }
         }
         first_q_iterator = first_queue;
         head = head->next;
