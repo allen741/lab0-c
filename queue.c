@@ -198,7 +198,15 @@ bool q_delete_dup(struct list_head *head)
 /* Swap every two adjacent nodes */
 void q_swap(struct list_head *head)
 {
-    return;
+    if (!head) {
+        return;
+    }
+    struct list_head *first, *second;
+    for (first = head->next, second = head->next->next;
+         first != head && second != head;
+         first = first->next->next, second = second->next->next) {
+        list_move(first, second);
+    }
 }
 
 /* Reverse elements in queue */
