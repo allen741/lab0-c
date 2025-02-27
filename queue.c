@@ -46,9 +46,7 @@ bool q_insert_head(struct list_head *head, char *s)
     if (!head || !s) {
         return false;
     }
-
     element_t *new_element = malloc(sizeof(element_t));
-
     if (!new_element) {
         return false;
     }
@@ -58,6 +56,7 @@ bool q_insert_head(struct list_head *head, char *s)
         free(new_element);
         return false;
     }
+
     list_add(&(new_element->list), head);
     free(new_element);
     return true;
