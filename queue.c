@@ -196,14 +196,23 @@ bool q_delete_dup(struct list_head *head)
     if (!head) {
         return false;
     }
+    if (head->next == head->prev) {
+        return true;
+    }
     struct list_head *pos, *pos_next;
 
-    list_for_each_safe (pos, pos_next, head) {
-        if (strcmp(list_entry(pos, element_t, list)->value,
-                   list_entry(pos_next, element_t, list)->value) == 0) {
-            list_del(pos);
-            free(list_entry(pos, element_t, list)->value);
-            free(list_entry(pos, element_t, list));
+    for (pos = head->next; pos->next != head; pos = pos->next) {
+        for (pos_next = pos->next; pos_next != head;) {
+            if (strcmp(list_entry(pos, element_t, list)->value,
+                       list_entry(pos_next, element_t, list)->value) == 0) {
+                struct list_head *to_delete = pos_next;
+                pos_next = pos_next->next;
+                list_del(to_delete);
+                free(list_entry(to_delete, element_t, list)->value);
+                free(list_entry(to_delete, element_t, list));
+                continue;
+            }
+            pos_next = pos_next->next;
         }
     }
     return true;
