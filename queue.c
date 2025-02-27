@@ -10,7 +10,20 @@
  *   cppcheck-suppress nullPointer
  */
 
-
+/*Be used in function q_merge*/
+#define add_to_first_queue(opera)                                        \
+    for (struct list_head *ptr = first_q_iterator;; ptr = ptr->next) {   \
+        if (strcmp(list_entry(ptr, element_t, list)->value,              \
+                   list_entry(queue, element_t, list)->value) opera 0 || \
+            !ptr) {                                                      \
+            queue_next = queue->next;                                    \
+            ptr = ptr->prev;                                             \
+            list_add(queue, ptr);                                        \
+            first_q_iterator = ptr->next;                                \
+            *size_ptr = (*size_ptr) + 1;                                 \
+            break;                                                       \
+        }                                                                \
+    }
 
 static inline element_t *e_new(char *s)
 {
@@ -324,5 +337,37 @@ int q_descend(struct list_head *head)
  * order */
 int q_merge(struct list_head *head, bool descend)
 {
-    return 0;
+    if (!head || list_empty(head)) {
+        return 0;
+    }
+    if (head->next == head->prev) {
+        return list_entry(head->next, queue_contex_t, chain)->size;
+    }
+
+    head->prev->next = NULL;
+    struct list_head *first_queue =
+        list_entry(head->next, queue_contex_t, chain)->q->next;
+
+    int *size_ptr = &list_entry(head->next, queue_contex_t, chain)->size;
+    head = head->next->next;
+    struct list_head *queue_next, *first_q_iterator = first_queue;
+    while (head) {
+        struct list_head *queue = list_entry(head, queue_contex_t, chain)->q;
+
+        queue->prev->next = NULL;
+        queue = queue->next;
+        queue->prev->next = NULL;
+
+        while (queue) {
+            if (descend == false) {
+                add_to_first_queue(>=);
+            } else {
+                add_to_first_queue(<=);
+            }
+            queue = queue_next;
+        }
+        first_q_iterator = first_queue;
+        head = head->next;
+    }
+    return *size_ptr;
 }
