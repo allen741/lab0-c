@@ -252,7 +252,7 @@ void q_reverseK(struct list_head *head, int k)
     if (!head || k == 1) {
         return;
     }
-    for (struct list_head *group_first = head; group_first != head;) {
+    for (struct list_head *group_first = head;;) {
         struct list_head *group_last = group_first;
         int check = 0;
         for (int i = 0; i < k; i++) {
@@ -272,11 +272,10 @@ void q_reverseK(struct list_head *head, int k)
 
         q_reverse(group_first);
 
-        group_first->prev->next = tmp_next;
         tmp_next->prev = group_first->prev;
+        group_first->prev->next = tmp_next;
         struct list_head *tmp = group_first->prev;
         group_first->prev = tmp_prev;
-
         group_first = tmp;
     }
 }
