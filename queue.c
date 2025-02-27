@@ -10,6 +10,32 @@
  *   cppcheck-suppress nullPointer
  */
 
+
+
+static inline element_t *e_new(char *s)
+{
+    if (!s) {
+        return NULL;
+    }
+
+    element_t *new_element = malloc(sizeof(element_t));
+    if (!new_element) {
+        return NULL;
+    }
+    INIT_LIST_HEAD(&new_element->list);
+
+    size_t len = strlen(s) + 1;
+    new_element->value = malloc(len);
+    if (!new_element->value) {
+        free(new_element);
+        return NULL;
+    }
+
+    memcpy(new_element->value, s, len);
+
+    return new_element;
+}
+
 /* Create an empty queue */
 struct list_head *q_new()
 {
@@ -41,24 +67,20 @@ void q_free(struct list_head *head)
 }
 
 /* Insert an element at head of queue */
+/* cppcheck-suppress nullPointer */
 bool q_insert_head(struct list_head *head, char *s)
 {
     if (!head || !s) {
         return false;
     }
-    element_t *new_element = malloc(sizeof(element_t));
+
+    element_t *new_element = e_new(s);
+
     if (!new_element) {
         return false;
     }
 
-    new_element->value = strdup(s);
-    if (!new_element->value) {
-        free(new_element);
-        return false;
-    }
-
     list_add(&(new_element->list), head);
-    free(new_element);
     return true;
 }
 
