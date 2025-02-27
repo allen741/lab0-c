@@ -225,9 +225,9 @@ void q_swap(struct list_head *head)
         return;
     }
     struct list_head *first, *second;
-    for (first = head->next, second = head->next->next;
+    for (first = head->next, second = first->next;
          first != head && second != head;
-         first = first->next->next, second = second->next->next) {
+         first = first->next, second = first->next) {
         list_move(first, second);
     }
 }
