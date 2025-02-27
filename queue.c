@@ -226,7 +226,36 @@ void q_reverse(struct list_head *head)
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
-    return;
+    if (!head || k == 1) {
+        return;
+    }
+    for (struct list_head *group_first = head; group_first != head;) {
+        struct list_head *group_last = group_first;
+        int check = 0;
+        for (int i = 0; i < k; i++) {
+            group_last = group_last->next;
+            if (group_last == head) {
+                check = 1;
+                break;
+            }
+        }
+        if (check == 1) {
+            break;
+        }
+        struct list_head *tmp_next = group_last->next;
+        struct list_head *tmp_prev = group_first->prev;
+        group_last->next = group_first;
+        group_first->prev = group_last;
+
+        q_reverse(group_first);
+
+        group_first->prev->next = tmp_next;
+        tmp_next->prev = group_first->prev;
+        struct list_head *tmp = group_first->prev;
+        group_first->prev = tmp_prev;
+
+        group_first = tmp;
+    }
 }
 
 /* Sort elements of queue in ascending/descending order */
