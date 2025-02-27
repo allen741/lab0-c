@@ -296,7 +296,28 @@ int q_ascend(struct list_head *head)
  * the right side of it */
 int q_descend(struct list_head *head)
 {
-    return 0;
+    if (!head || list_empty(head)) {
+        return 0;
+    }
+    if (head->next == head->prev) {
+        return 1;
+    }
+    int count = 0;
+    for (struct list_head *pos = head->next, *pos_next = pos->next;
+         pos_next != head; pos = pos->next, pos_next = pos->next) {
+        if (strcmp(list_entry(pos, element_t, list)->value,
+                   list_entry(pos_next, element_t, list)->value) < 0) {
+            list_del(pos_next);
+            free(list_entry(pos_next, element_t, list)->value);
+            free(list_entry(pos_next, element_t, list));
+            pos_next = pos->next;
+            continue;
+        }
+        pos = pos_next;
+        pos_next = pos_next->next;
+        count++;
+    }
+    return count;
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
