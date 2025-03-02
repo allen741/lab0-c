@@ -10,30 +10,6 @@
  *   cppcheck-suppress nullPointer
  */
 
-/*Be used in function q_merge*/
-#define add_to_first_queue(opera)                            \
-    struct list_head *ptr_prev = first_q_iterator->prev;     \
-    queue_value = list_entry(queue, element_t, list)->value; \
-    for (struct list_head *ptr = first_q_iterator;;          \
-         ptr_prev = ptr, ptr = ptr->next) {                  \
-        if (ptr == first_queue) {                            \
-            queue_next = queue->next;                        \
-            list_add(queue, ptr_prev);                       \
-            first_q_iterator = ptr_prev->next;               \
-            size = size + 1;                                 \
-            break;                                           \
-        }                                                    \
-        ptr_value = list_entry(ptr, element_t, list)->value; \
-        if (ptr_value && queue_value &&                      \
-            strcmp(ptr_value, queue_value) opera 0) {        \
-            queue_next = queue->next;                        \
-            list_add(queue, ptr_prev);                       \
-            first_q_iterator = ptr_prev->next;               \
-            size = size + 1;                                 \
-            break;                                           \
-        }                                                    \
-    }
-
 #define merge_two_list(opera)                                                  \
     struct list_head **merge_head_ptr = &merge_head;                           \
     while (true) {                                                             \
@@ -61,29 +37,6 @@
         }                                                                      \
     }
 
-static inline element_t *e_new(char *s)
-{
-    if (!s) {
-        return NULL;
-    }
-
-    element_t *new_element = malloc(sizeof(element_t));
-    if (!new_element) {
-        return NULL;
-    }
-    INIT_LIST_HEAD(&new_element->list);
-
-    size_t len = strlen(s) + 1;
-    new_element->value = malloc(len);
-    if (!new_element->value) {
-        free(new_element);
-        return NULL;
-    }
-    memcpy(new_element->value, s, len);
-
-    return new_element;
-}
-
 /* Create an empty queue */
 struct list_head *q_new()
 {
@@ -104,14 +57,10 @@ void q_free(struct list_head *head)
     if (!head) {
         return;
     }
-    if (list_empty(head)) {
-        free(head);
-        return;
-    }
-    struct list_head *pos, *pos_next;
+    struct list_head *pos, *tmp;
 
-    for (pos = head->next, pos_next = pos->next; pos != head && pos != NULL;
-         pos = pos_next, pos_next = pos_next->next) {
+    /* cppcheck-suppress unknownMacro */
+    list_for_each_safe (pos, tmp, head) {
         free(list_entry(pos, element_t, list)->value);
         free(list_entry(pos, element_t, list));
     }
@@ -126,31 +75,27 @@ bool q_insert_head(struct list_head *head, char *s)
         return false;
     }
 
-    element_t *new_element = e_new(s);
+    element_t *new_element = malloc(sizeof(element_t));
 
     if (!new_element) {
         return false;
     }
 
+    new_element->value = strdup(s);
+    if (!new_element->value) {
+        free(new_element);
+        return false;
+    }
+
     list_add(&(new_element->list), head);
+    /* cppcheck-suppress memleak */
     return true;
 }
 
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
-    if (!head || !s) {
-        return false;
-    }
-
-    element_t *new_element = e_new(s);
-
-    if (!new_element) {
-        return false;
-    }
-
-    list_add_tail(&(new_element->list), head);
-    return true;
+    return q_insert_head(head->prev, s);
 }
 
 /* Remove an element from head of queue */
@@ -195,7 +140,7 @@ int q_size(struct list_head *head)
     int len = 0;
     struct list_head *li;
 
-    for (li = head->next; li != head && li != NULL; li = li->next) {
+    list_for_each (li, head) {
         len++;
     }
     return len;
@@ -232,12 +177,12 @@ bool q_delete_dup(struct list_head *head)
     if (!head) {
         return false;
     }
-    if (head->next == head->prev) {
+    if (head->next == head->prev || list_empty(head)) {
         return true;
     }
     struct list_head *pos, *pos_next;
-    for (pos = head->next; pos != head; pos = pos->next) {
-        for (pos_next = pos->next; pos_next != head;) {
+    for (pos = head->next; pos != head && pos != NULL; pos = pos->next) {
+        for (pos_next = pos->next; pos_next != head && pos_next != NULL;) {
             if (strcmp(list_entry(pos, element_t, list)->value,
                        list_entry(pos_next, element_t, list)->value) == 0) {
                 struct list_head *to_delete = pos_next;
@@ -256,7 +201,7 @@ bool q_delete_dup(struct list_head *head)
 /* Swap every two adjacent nodes */
 void q_swap(struct list_head *head)
 {
-    if (!head) {
+    if (!head || head->next == head->prev) {
         return;
     }
     struct list_head *first, *second;
@@ -284,9 +229,10 @@ void q_reverse(struct list_head *head)
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
-    if (!head || k == 1) {
+    if (!head || k == 1 || head->prev == head->next) {
         return;
     }
+
     for (struct list_head *group_first = head;;) {
         struct list_head *group_last = group_first;
         int check = 0;
@@ -318,7 +264,7 @@ void q_reverseK(struct list_head *head, int k)
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
-    if (!head || list_empty(head) || head->next == head->prev) {
+    if (!head || head->next == head->prev) {
         return;
     }
     int count = 0, count_compare = 1;
@@ -447,40 +393,19 @@ int q_merge(struct list_head *head, bool descend)
         return list_entry(head->next, queue_contex_t, chain)->size;
     }
 
-    head->prev->next = NULL;
     struct list_head *first_queue =
         list_entry(head->next, queue_contex_t, chain)->q;
 
-    int size = list_entry(head->next, queue_contex_t, chain)->size;
-    head = head->next->next;
-    struct list_head *queue_next, *first_q_iterator = first_queue->next;
-    const char *ptr_value, *queue_value;
-    while (head) {
-        struct list_head *queue = list_entry(head, queue_contex_t, chain)->q;
-        if (list_empty(queue)) {
-            head = head->next;
-            continue;
-        }
-        queue->prev->next = NULL;
-        queue = queue->next;
-        queue_next = queue->next;
-        while (queue) {
-            if (descend == false) {
-                add_to_first_queue(>=);
-            } else {
-                add_to_first_queue(<=);
-            }
-            queue = queue_next;
-            if (queue_next) {
-                queue_next = queue_next->next;
-            }
-        }
-        struct list_head *tmp = list_entry(head, queue_contex_t, chain)->q;
-        tmp->next = tmp;
-        tmp->prev = tmp;
-        first_q_iterator = first_queue->next;
-        head = head->next;
+    struct list_head *queue_ptr = head->next->next;
+    while (queue_ptr != head) {
+        struct list_head *queue =
+            list_entry(queue_ptr, queue_contex_t, chain)->q;
+
+        list_splice_init(queue, first_queue);
+        list_entry(queue_ptr, queue_contex_t, chain)->size = 0;
+        queue_ptr = queue_ptr->next;
     }
-    list_entry(first_queue, queue_contex_t, chain)->size = size;
-    return size;
+    q_sort(first_queue, descend);
+    list_entry(first_queue, queue_contex_t, chain)->size = q_size(first_queue);
+    return list_entry(first_queue, queue_contex_t, chain)->size;
 }
