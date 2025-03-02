@@ -110,7 +110,8 @@ void q_free(struct list_head *head)
     }
     struct list_head *pos, *pos_next;
 
-    list_for_each_safe (pos, pos_next, head) {
+    for (pos = head->next, pos_next = pos->next; pos != head && pos != NULL;
+         pos = pos_next, pos_next = pos_next->next) {
         free(list_entry(pos, element_t, list)->value);
         free(list_entry(pos, element_t, list));
     }
@@ -182,7 +183,6 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
         strncpy(sp, entry->value, bufsize - 1);
         sp[bufsize - 1] = '\0';
     }
-
     return entry;
 }
 
@@ -195,7 +195,7 @@ int q_size(struct list_head *head)
     int len = 0;
     struct list_head *li;
 
-    list_for_each (li, head) {
+    for (li = head->next; li != head && li != NULL; li = li->next) {
         len++;
     }
     return len;
@@ -236,7 +236,7 @@ bool q_delete_dup(struct list_head *head)
         return true;
     }
     struct list_head *pos, *pos_next;
-    for (pos = head->next; pos->next != head; pos = pos->next) {
+    for (pos = head->next; pos != head; pos = pos->next) {
         for (pos_next = pos->next; pos_next != head;) {
             if (strcmp(list_entry(pos, element_t, list)->value,
                        list_entry(pos_next, element_t, list)->value) == 0) {
@@ -318,13 +318,8 @@ void q_reverseK(struct list_head *head, int k)
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
-    printf("q_sort");
-
     if (!head || list_empty(head) || head->next == head->prev) {
         return;
-    }
-    for (struct list_head *index = head->next; index != head;
-         index = index->next) {
     }
     int count = 0, count_compare = 1;
     struct list_head *pending = NULL, *list = head->next, *merge_first,
@@ -393,22 +388,23 @@ int q_ascend(struct list_head *head)
     if (head->next == head->prev) {
         return 1;
     }
-    int count = 0;
     struct list_head *pos, *pos_next;
-    for (pos = head->next, pos_next = pos->next; pos_next != head;) {
-        if (strcmp(list_entry(pos, element_t, list)->value,
-                   list_entry(pos_next, element_t, list)->value) > 0) {
-            list_del(pos_next);
-            free(list_entry(pos_next, element_t, list)->value);
-            free(list_entry(pos_next, element_t, list));
-            pos_next = pos->next;
-            continue;
+    for (pos = head->next; pos != head; pos = pos->next) {
+        const char *pos_val = list_entry(pos, element_t, list)->value;
+        for (pos_next = pos->next; pos_next != head;
+             pos_next = pos_next->next) {
+            if (strcmp(pos_val, list_entry(pos_next, element_t, list)->value) >
+                0) {
+                struct list_head *tmp = pos;
+                pos = pos->prev;
+                list_del(tmp);
+                free(list_entry(tmp, element_t, list)->value);
+                free(list_entry(tmp, element_t, list));
+                break;
+            }
         }
-        pos = pos_next;
-        pos_next = pos_next->next;
-        count++;
     }
-    return count + 1;
+    return q_size(head);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -421,30 +417,29 @@ int q_descend(struct list_head *head)
     if (head->next == head->prev) {
         return 1;
     }
-    int count = 0;
     struct list_head *pos, *pos_next;
-    for (pos = head->next, pos_next = pos->next; pos_next != head;) {
-        if (strcmp(list_entry(pos, element_t, list)->value,
-                   list_entry(pos_next, element_t, list)->value) < 0) {
-            list_del(pos_next);
-            free(list_entry(pos_next, element_t, list)->value);
-            free(list_entry(pos_next, element_t, list));
-            pos_next = pos->next;
-            continue;
+    for (pos = head->next; pos != head; pos = pos->next) {
+        const char *pos_val = list_entry(pos, element_t, list)->value;
+        for (pos_next = pos->next; pos_next != head;
+             pos_next = pos_next->next) {
+            if (strcmp(pos_val, list_entry(pos_next, element_t, list)->value) <
+                0) {
+                struct list_head *tmp = pos;
+                pos = pos->prev;
+                list_del(tmp);
+                free(list_entry(tmp, element_t, list)->value);
+                free(list_entry(tmp, element_t, list));
+                break;
+            }
         }
-        pos = pos_next;
-        pos_next = pos_next->next;
-        count++;
     }
-    return count + 1;
+    return q_size(head);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */
 int q_merge(struct list_head *head, bool descend)
 {
-    printf("q_merge");
-
     if (!head || list_empty(head)) {
         return 0;
     }
