@@ -59,7 +59,6 @@ void q_free(struct list_head *head)
     }
     struct list_head *pos, *tmp;
 
-    /* cppcheck-suppress unknownMacro */
     list_for_each_safe (pos, tmp, head) {
         free(list_entry(pos, element_t, list)->value);
         free(list_entry(pos, element_t, list));
