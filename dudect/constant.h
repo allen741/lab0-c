@@ -32,5 +32,4 @@ bool measure(int64_t *before_ticks,
              int64_t *after_ticks,
              uint8_t *input_data,
              int mode);
-
 #endif
