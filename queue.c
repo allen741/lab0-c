@@ -80,7 +80,6 @@ bool q_insert_head(struct list_head *head, char *s)
         return false;
     }
 
-    INIT_LIST_HEAD(&new_element->list);
     new_element->value = strdup(s);
     if (!new_element->value) {
         free(new_element);
@@ -95,26 +94,7 @@ bool q_insert_head(struct list_head *head, char *s)
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
-    if (!head || !s) {
-        return false;
-    }
-
-    element_t *new_element = malloc(sizeof(element_t));
-
-    if (!new_element) {
-        return false;
-    }
-
-    INIT_LIST_HEAD(&new_element->list);
-    new_element->value = strdup(s);
-    if (!new_element->value) {
-        free(new_element);
-        return false;
-    }
-
-    list_add_tail(&(new_element->list), head);
-    /* cppcheck-suppress memleak */
-    return true;
+    return q_insert_head(head->prev, s);
 }
 
 /* Remove an element from head of queue */
@@ -127,7 +107,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
     list_del(head->next);
 
     if (sp) {
-        memcpy(sp, entry->value, bufsize - 1);
+        strncpy(sp, entry->value, bufsize - 1);
         sp[bufsize - 1] = '\0';
     }
     return entry;
@@ -144,7 +124,7 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
     list_del(head->prev);
 
     if (sp) {
-        memcpy(sp, entry->value, bufsize - 1);
+        strncpy(sp, entry->value, bufsize - 1);
         sp[bufsize - 1] = '\0';
     }
     return entry;
