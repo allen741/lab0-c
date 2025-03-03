@@ -80,6 +80,7 @@ bool q_insert_head(struct list_head *head, char *s)
         return false;
     }
 
+    INIT_LIST_HEAD(&new_element->list);
     new_element->value = strdup(s);
     if (!new_element->value) {
         free(new_element);
@@ -104,6 +105,7 @@ bool q_insert_tail(struct list_head *head, char *s)
         return false;
     }
 
+    INIT_LIST_HEAD(&new_element->list);
     new_element->value = strdup(s);
     if (!new_element->value) {
         free(new_element);
