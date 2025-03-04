@@ -423,3 +423,29 @@ int q_merge(struct list_head *head, bool descend)
     list_entry(first_queue, queue_contex_t, chain)->size = q_size(first_queue);
     return list_entry(first_queue, queue_contex_t, chain)->size;
 }
+
+__attribute__((weak)) void q_shuffle(struct list_head *head)
+{
+    if (!head || list_empty(head) || head->next == head->prev) {
+        return;
+    }
+    int size = q_size(head) - 1;
+    struct list_head *node = NULL, *tail = head->prev, *node_prev = NULL;
+
+    while (size > 0) {
+        int random = rand() % size;
+        node = head->next;
+        while (random > 0) {
+            node = node->next;
+            random--;
+        }
+        node_prev = node->prev;
+        list_move(node, tail);
+        list_move(tail, node_prev);
+        tail = node->prev;
+        size--;
+    }
+    return;
+}
+
+
