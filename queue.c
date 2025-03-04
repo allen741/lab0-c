@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "queue.h"
+
 
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
  * but some of them cannot occur. You can suppress them by adding the
@@ -424,7 +426,7 @@ int q_merge(struct list_head *head, bool descend)
     return list_entry(first_queue, queue_contex_t, chain)->size;
 }
 
-__attribute__((weak)) void q_shuffle(struct list_head *head)
+void q_shuffle(struct list_head *head)
 {
     if (!head || list_empty(head) || head->next == head->prev) {
         return;
@@ -433,6 +435,7 @@ __attribute__((weak)) void q_shuffle(struct list_head *head)
     struct list_head *node = NULL, *tail = head->prev, *node_prev = NULL;
 
     while (size > 0) {
+        srand(time(NULL));
         int random = rand() % size;
         node = head->next;
         while (random > 0) {
@@ -447,5 +450,3 @@ __attribute__((weak)) void q_shuffle(struct list_head *head)
     }
     return;
 }
-
-
